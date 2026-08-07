@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>存档管理 · 游戏乐园</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .page { padding-top: 40px; }
+  .save-box { max-width: 800px; margin: 0 auto; }
+  .save-box h2 { font-size: 20px; margin-bottom: 6px; }
+  .save-box .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .actions { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 22px; border: none; border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 600; transition: .2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #6a9bff; }
+  .btn-secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: #2c3a55; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .game-save { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #1d2638; }
+  .game-save:last-child { border-bottom: none; }
+  .game-save .icon { font-size: 28px; width: 40px; text-align: center; }
+  .game-save .info { flex: 1; }
+  .game-save .info .gn { font-weight: 600; font-size: 15px; }
+  .game-save .info .gs { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .status { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+  .status.ok { background: #1a3a2a; color: #3ddc84; }
+  .status.none { background: #2a2430; color: var(--muted); }
+  #msg { margin-top: 16px; padding: 10px 16px; border-radius: 10px; font-size: 13px; display: none; }
+  #msg.success { background: #1a3a2a; color: #3ddc84; display: block; }
+  #msg.error { background: #3a1a1a; color: #ff6b6b; display: block; }
+  .topbar-inner .save-link { font-size: 13px; padding: 6px 14px; border-radius: 8px; background: var(--panel2); color: var(--muted); transition: .2s; }
+  .topbar-inner .save-link:hover { color: #fff; background: #2c3a55; }
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="logo" href="/game/"><span class="logo-icon">🎮</span><span class="logo-text" id="portalName"></span></a>
+  <div class="searchbox">
+    <a class="save-link" href="/game/">‹ 返回游戏</a>
+  </div>
+</div></header>
+
+<div class="page" style="grid-template-columns:1fr">
+  <div class="save-box">
+    <h2>💾 存档管理</h2>
+    <p class="sub">存档保存在浏览器本地存储中。
+       此处可导出全部存档为文件（放入 U 盘 save 文件夹），
+       或从文件恢复存档。</p>
+    <div class="actions">
+      <button id="exportAll" class="btn btn-primary">⬇ 导出全部存档</button>
+      <button id="importBtn" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">⬆ 导入存档</button>
+      <input id="fileInput" type="file" accept=".json" style="display:none">
+      <button id="clearAll" class="btn btn-danger">🗑 清空全部存档</button>
+    </div>
+    <div id="msg"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script src="js/games.js"></script>
+<script>
+  document.getElementById('portalName').textContent = (typeof PORTAL !== 'undefined' ? PORTAL.name : '游戏乐园') + ' · 存档'
+
+  const GAME = window.GAMES || []
+  const msgEl = document.getElementById('msg')
+
+  function showMsg(text, cls) {
+    msgEl.textContent = text
+    msgEl.className = cls
+    setTimeout(() => { msgEl.style.display = 'none' }, 4000)
+  }
+
+  function collectSaves() {
+    const saves = {}
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      try { saves[key] = localStorage.getItem(key) } catch (e) { saves[key] = null }
+    }
+    return saves
+  }
+
+  function exportAll() {
+    const data = { time: new Date().toISOString(), saves: collectSaves() }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'save_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.json'
+    a.click()
+    showMsg('存档已导出，请保存到 U 盘 save 文件夹中', 'success')
+  }
+
+  function importFile(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result)
+        if (!data.saves || typeof data.saves !== 'object') throw new Error('无效的存档文件')
+        // restore
+        const count = Object.keys(data.saves).length
+        for (const [k, v] of Object.entries(data.saves)) {
+          if (v !== null && v !== undefined) localStorage.setItem(k, String(v))
+        }
+        showMsg(`已恢复 ${count} 条存档记录`, 'success')
+        renderList()
+      } catch (err) {
+        showMsg('导入失败: ' + err.message, 'error')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  function clearAll() {
+    if (!confirm('确定要清空全部存档吗？此操作不可恢复！')) return
+    localStorage.clear()
+    showMsg('全部存档已清空', 'error')
+    renderList()
+  }
+
+  function getGameSaves() {
+    const saves = collectSaves()
+    const games = []
+    const mapped = {}
+    for (const g of GAME) {
+      const id = g.id
+      const keysForGame = []
+      // Ruffle keys
+      const path = g.path.replace('games/flash/', '').replace('games/html5/', '')
+      for (const k of Object.keys(saves)) {
+        if (k.startsWith('ruffle_storage_') && k.includes(path)) {
+          keysForGame.push({ key: k, size: (saves[k] || '').length, type: 'Ruffle 存档' })
+        }
+        if (k.startsWith('ruffle_config_') && k.includes(path)) {
+          keysForGame.push({ key: k, size: (saves[k] || '').length, type: 'Ruffle 配置' })
+        }
+      }
+      // HTML5 and custom keys
+      for (const k of Object.keys(saves)) {
+        if (k.startsWith('ruffle_')) continue
+        if (k.startsWith(id + '_') || k.includes(id) || k.includes(g.name)) {
+          keysForGame.push({ key: k, size: (saves[k] || '').length, type: '游戏数据' })
+        }
+      }
+      if (keysForGame.length > 0) {
+        const totalSize = keysForGame.reduce((s, x) => s + x.size, 0)
+        games.push({ ...g, keys: keysForGame, totalSize, hasSave: true })
+      } else {
+        games.push({ ...g, keys: [], totalSize: 0, hasSave: false })
+      }
+    }
+    return games
+  }
+
+  function formatSize(n) {
+    if (n < 1024) return n + ' B'
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'
+    return (n / 1048576).toFixed(1) + ' MB'
+  }
+
+  function renderList() {
+    const list = getGameSaves()
+    const el = document.getElementById('list')
+    if (!el) return
+    if (!list.length) { el.innerHTML = '<p class="sub" style="margin-top:20px">当前没有配置任何游戏</p>'; return }
+    el.innerHTML = list.map(g => `
+      <div class="game-save">
+        <div class="icon">${g.icon || g.type === 'swf' ? '🎬' : '🎮'}</div>
+        <div class="info">
+          <div class="gn">${g.name}</div>
+          <div class="gs">${g.hasSave ? g.keys.length + ' 条记录 · ' + formatSize(g.totalSize) : '暂无存档'}</div>
+        </div>
+        <span class="status ${g.hasSave ? 'ok' : 'none'}">${g.hasSave ? '已有存档' : '无'}</span>
+      </div>
+    `).join('')
+  }
+
+  document.getElementById('exportAll').addEventListener('click', exportAll)
+  document.getElementById('fileInput').addEventListener('change', importFile)
+  document.getElementById('clearAll').addEventListener('click', clearAll)
+  renderList()
+</script>
+</body>
+</html>

@@ -4,15 +4,15 @@
 // HTML5 游戏: 把游戏文件夹放进 games/html5/<id>/ 即可
 //   { id, name, desc, cat, tags:[], type:'html5', path:'games/html5/<id>/index.html' }
 // Flash 游戏: 把 .swf 文件放进 games/flash/ 即可(用内置 Ruffle 引擎离线运行)
-//   注意: 文件名请去掉 .swf 扩展名(如 strike-force-heroes-1), 避免被浏览器里的 Flash 插件劫持
-//   { id, name, desc, cat, tags:[], type:'swf', path:'games/flash/<文件名>' }
+//   注意: 文件名请去掉 .swf 扩展名, 避免被浏览器里的 Flash 插件劫持
+//   { id, name, desc, cat, tags:[], type:'swf', ratio:'宽:高', path:'games/flash/<文件名>' }
 // ============================================================
 
 const GAMES = [
   {
     id: 'snake',
     name: '贪吃蛇',
-    desc: '经典贪吃蛇，键盘方向键控制，吃到食物变长',
+    desc: '方向键控制，空格暂停/继续',
     cat: '休闲',
     tags: ['经典', '单机'],
     type: 'swf',
@@ -22,7 +22,7 @@ const GAMES = [
   {
     id: 'tetris',
     name: '俄罗斯方块',
-    desc: '经典俄罗斯方块，消行得分，长按↓加速下落',
+    desc: '←→移动，↑旋转，↓加速，空格落底',
     cat: '益智',
     tags: ['经典', '单机'],
     type: 'html5',
@@ -31,7 +31,7 @@ const GAMES = [
   {
     id: 'breakout',
     name: '打砖块',
-    desc: '经典打砖块，用挡板接球击碎所有砖块',
+    desc: '鼠标/←→移动挡板，空格/点击发球',
     cat: '街机',
     tags: ['经典', '单机'],
     type: 'html5',
@@ -40,7 +40,7 @@ const GAMES = [
   {
     id: '2048',
     name: '2048',
-    desc: '合并数字方块，凑出 2048！方向键或滑动操作',
+    desc: '方向键/WASD/滑动操作',
     cat: '益智',
     tags: ['数字', '单机'],
     type: 'html5',
@@ -49,7 +49,7 @@ const GAMES = [
   {
     id: 'sfh1',
     name: '战火英雄1',
-    desc: '经典枪战闯关，中文版。鼠标瞄准射击，WASD 移动，R 装弹，Q 切换武器，E 技能',
+    desc: 'WASD移动，鼠标瞄准射击，R装弹，Q换武器，E技能',
     cat: '射击',
     tags: ['经典', '街机', '战火英雄'],
     type: 'swf',
@@ -59,7 +59,7 @@ const GAMES = [
   {
     id: 'sfh2',
     name: '战火英雄2',
-    desc: '中文版。鼠标瞄准射击，AD 移动，W/空格 跳跃，S 下蹲，R 装弹，Q 切换武器，E 技能',
+    desc: 'AD移动，W/空格跳跃，S下蹲，R装弹，Q换武器，E技能，鼠标瞄准射击',
     cat: '射击',
     tags: ['经典', '街机', '战火英雄'],
     type: 'swf',
@@ -69,7 +69,7 @@ const GAMES = [
   {
     id: 'sfh3',
     name: '战火英雄3',
-    desc: '完全汉化版。鼠标瞄准射击，AD 移动，W 跳跃，S 下蹲，R 装弹，E 技能，Q 切换武器',
+    desc: 'AD移动，W跳跃，S下蹲，R装弹，E技能，Q换武器，鼠标瞄准射击',
     cat: '射击',
     tags: ['经典', '街机', '战火英雄'],
     type: 'swf',
@@ -79,7 +79,7 @@ const GAMES = [
   {
     id: 'fengkuang-xiaoren',
     name: '疯狂小人战斗',
-    desc: '经典多人格斗。WASD 移动，J 攻击，K 投掷，Shift 防御；2P 用方向键/0/1/2',
+    desc: '1P:WASD移动，J攻击，K投掷，Shift防御；2P:方向键移动，0/1/2攻击',
     cat: '格斗',
     tags: ['格斗', '多人', '经典'],
     type: 'swf',
@@ -88,8 +88,8 @@ const GAMES = [
   },
   {
     id: 'street-fighter-2',
-    name: '街头霸王II',
-    desc: '经典街霸格斗。方向键移动，J 拳，K 脚，L 跳，U/I/O 必杀技',
+    name: '街头霸王Ⅱ',
+    desc: '方向键移动，J拳，K脚，L跳，U/I/O必杀技',
     cat: '格斗',
     tags: ['格斗', '街霸', '经典'],
     type: 'swf',
@@ -99,7 +99,7 @@ const GAMES = [
   {
     id: 'naruto-vs-bleach',
     name: '死神VS火影3.3',
-    desc: '忍者与死神大乱斗。W 跳，A/D 移动，S 防御，J 攻击，U 远攻，I 技能，O 必杀，L 援助',
+    desc: 'W跳，A/D移动，S防御，J攻击，U远攻，I技能，O必杀，L援助',
     cat: '格斗',
     tags: ['格斗', '动漫', '对战'],
     type: 'swf',
@@ -109,7 +109,7 @@ const GAMES = [
   {
     id: 'fireboy-watergirl',
     name: '森林冰火人',
-    desc: '经典双人合作闯关。1P 方向键移动，2P WASD 移动，各自吃到对应宝石并避开对方的液体',
+    desc: '1P方向键移动，2P WASD移动；各自吃到对应宝石，避开对方液体',
     cat: '冒险',
     tags: ['双人', '合作', '经典'],
     type: 'swf',
@@ -119,7 +119,7 @@ const GAMES = [
   {
     id: 'pvz',
     name: '植物大战僵尸',
-    desc: '完整中文版。鼠标收集阳光、种植植物，抵御一波波僵尸入侵，50 个冒险关卡',
+    desc: '鼠标收集阳光、种植植物、铲除僵尸',
     cat: '益智',
     tags: ['塔防', '经典'],
     type: 'swf',
@@ -129,7 +129,7 @@ const GAMES = [
   {
     id: 'stickman-badminton',
     name: '火柴人羽毛球',
-    desc: '双人羽毛球对战。1P WASD 移动空格击球，2P 方向键回车击球',
+    desc: '1P WASD移动，空格击球；2P方向键移动，回车击球',
     cat: '体育',
     tags: ['双人', '体育', '休闲'],
     type: 'swf',
@@ -138,8 +138,8 @@ const GAMES = [
   },
   {
     id: 'boxhead-zw',
-    name: '冲出僵尸的包围',
-    desc: 'Boxhead: The Zombie Wars 经典打僵尸。WASD 移动，鼠标瞄准射击，1-4 切枪，R 装弹',
+    name: '僵尸危机5',
+    desc: 'WASD移动，鼠标瞄准射击，1-4切枪，R装弹',
     cat: '射击',
     tags: ['僵尸', '生存', '经典'],
     type: 'swf',
@@ -148,8 +148,8 @@ const GAMES = [
   },
   {
     id: 'boxhead-2play',
-    name: '冲出僵尸的包围2Play',
-    desc: 'Boxhead 双人合作版。1P WASD+鼠标，2P 方向键+鼠标，一起守住房间',
+    name: '僵尸危机·双人版',
+    desc: '1P WASD+鼠标，2P方向键+鼠标',
     cat: '射击',
     tags: ['僵尸', '双人', '生存'],
     type: 'swf',
@@ -158,8 +158,8 @@ const GAMES = [
   },
   {
     id: 'boxhead-halloween',
-    name: '冲出僵尸的包围·万圣节',
-    desc: 'Boxhead 万圣节特辑。WASD 移动，鼠标瞄准射击，消灭幽灵僵尸',
+    name: '僵尸危机·万圣节',
+    desc: 'WASD移动，鼠标瞄准射击',
     cat: '射击',
     tags: ['僵尸', '万圣节', '生存'],
     type: 'swf',
@@ -168,8 +168,8 @@ const GAMES = [
   },
   {
     id: 'kof-wing191',
-    name: '拳皇Wing1.91',
-    desc: '拳皇 Wing 最新版，KOF 同人格斗巅峰。W 跳 A/D 移动 S 防御，J 轻拳 K 轻脚 L 重击，U/I/O 技能',
+    name: '拳皇 Wing 1.91',
+    desc: 'W跳，A/D移动，S防御，J轻拳，K轻脚，L重击，U/I/O必杀技',
     cat: '格斗',
     tags: ['格斗', '拳皇', 'KOF'],
     type: 'swf',
@@ -192,7 +192,7 @@ const CATS = ['全部', '格斗', '街机', '射击', '益智', '休闲', '冒�
 
 // 门户信息
 const PORTAL = {
-  name: '!博客!',
+  name: '游戏乐园',
   subtitle: '离线畅玩 · 免下载 · 免安装',
   banner: null
 }
