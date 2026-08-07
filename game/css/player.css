@@ -37,6 +37,8 @@ body {
   transition: .2s;
 }
 .back:hover { color: #fff; background: #2b2d30; }
+.save-btn { font-size: 20px; line-height: 1; color: #908d8d; text-decoration: none; padding: 0 6px; border-radius: 0; transition: .2s; }
+.save-btn:hover { color: #fff; background: #2b2d30; }
 .pbar-actions { margin-left: auto; display: flex; gap: 8px; }
 .pbtn {
   width: 36px; height: 36px;

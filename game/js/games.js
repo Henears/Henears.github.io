@@ -192,7 +192,7 @@ const CATS = ['全部', '格斗', '街机', '射击', '益智', '休闲', '冒�
 
 // 门户信息
 const PORTAL = {
-  name: '游戏乐园',
+  name: 'Thioda',
   subtitle: '离线畅玩 · 免下载 · 免安装',
   banner: null
 }
