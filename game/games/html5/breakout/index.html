@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打砖块</title>
+<style>
+  body{margin:0;background:#0f1420;color:#e8edf7;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;height:100vh;justify-content:center}
+  h1{font-size:20px;margin:6px 0}
+  .info{color:#8b8ba2;font-size:13px;margin-bottom:10px}
+  canvas{background:#1d2433;border:2px solid #2c3a55;border-radius:10px}
+  #over{position:fixed;display:none;background:rgba(10,14,24,.9);padding:24px 40px;border-radius:12px;text-align:center}
+  #over b{font-size:22px}
+  span.score{margin-left:10px;color:#4f8cff}
+  button{margin-top:12px;padding:8px 22px;border:none;border-radius:8px;background:#ff9f43;color:#fff;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>打砖块<span class="score" id="score">0</span></h1>
+<div class="info">鼠标 或 ←→ 移动挡板 · 空格 / 点击 发球</div>
+<canvas id="cv" width="560" height="420"></canvas>
+<div id="over"><b>游戏结束</b><br><button onclick="location.reload()">再来一局</button></div>
+<script>
+(function(){
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=560,H=420,BALL_R=8,PAD_H=12,PAD_W=90;
+var COLS=8,ROWS=5,BRICK_W=62,BRICK_H=22;
+var palette=['#ff6b6b','#ff9f43','#ffd93d','#7bed9f','#54a0ff'];
+var bricks,ball,paddle={w:PAD_W,h:PAD_H},score=0,over=false,raf=null,started=false;
+
+function makeBricks(){
+  bricks=[];
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)
+    bricks.push({x:c*(BRICK_W+6)+8,y:36+r*(BRICK_H+6),w:BRICK_W,h:BRICK_H,color:palette[r],hp:(r===ROWS-1?2:1)});
+}
+function resetGame(){
+  makeBricks();
+  paddle.x=W/2-PAD_W/2;
+  paddle.y=H-30;
+  ball=[W/2,H-40,2+Math.random()*2,-2.5];
+  score=0;
+  document.getElementById('score').textContent='0';
+  over=false;
+}
+function loop(){
+  raf=requestAnimationFrame(loop);
+  ctx.fillStyle='#1d2433';ctx.fillRect(0,0,W,H);
+
+  if(!over&&started){
+    // move ball
+    ball[0]+=ball[2];ball[1]+=ball[3];
+    if(ball[0]<BALL_R){ball[0]=BALL_R;ball[2]=-ball[2]}
+    if(ball[0]+BALL_R>W){ball[0]=W-BALL_R;ball[2]=-ball[2]}
+    if(ball[1]<BALL_R){ball[1]=BALL_R;ball[3]=-ball[3]}
+    if(ball[1]+BALL_R>H){
+      over=true;
+    }
+    // paddle collision
+    if(ball[1]+BALL_R>paddle.y&&ball[1]-BALL_R<paddle.y+PAD_H&&ball[0]+BALL_R>paddle.x&&ball[0]-BALL_R<paddle.x+PAD_W){
+      ball[2]+=(ball[0]-paddle.x)/PAD_W*1.5;
+      ball[3]=-Math.abs(ball[3]);
+    }
+    // brick collision
+    for(var i=0;i<bricks.length;i++){
+      var b=bricks[i];
+      if(ball[0]+BALL_R>b.x&&ball[0]-BALL_R<b.x+b.w&&ball[1]+BALL_R>b.y&&ball[1]-BALL_R<b.y+b.h){
+        b.hp--;
+        var cx=Math.max(b.x,Math.min(ball[0],b.x+b.w));
+        var cy=Math.max(b.y,Math.min(ball[1],b.y+b.h));
+        var dx=ball[0]-cx,dy=ball[1]-cy;
+        if(Math.abs(dx)>Math.abs(dy))ball[2]=-ball[2];
+        else ball[3]=-ball[3];
+        if(b.hp<=0)bricks.splice(i,1);
+        score+=10;document.getElementById('score').textContent=score;
+        if(bricks.length===0){started=false}
+        break;
+      }
+    }
+  }
+
+  for(var i=0;i<bricks.length;i++){var b=bricks[i];
+    ctx.fillStyle=b.hp>1?'#fff':b.color;
+    ctx.fillRect(b.x,b.y,b.w,b.h)}
+  ctx.fillStyle='#4f8cff';
+  ctx.fillRect(paddle.x,paddle.y,paddle.w,PAD_H);
+  ctx.fillStyle='#eee';ctx.beginPath();ctx.arc(ball[0],ball[1],BALL_R,0,7);ctx.fill();
+
+  if(over){document.getElementById('over').style.display='block'}
+  else if(!started){ctx.fillStyle='#9aa7c2';ctx.font='16px sans-serif';ctx.textAlign='center';
+    ctx.fillText('按 ←→ / 鼠标 移动 · 空格 发球',W/2,H/2)}
+}
+function serve(){if(over)return;started=true}
+cv.addEventListener('mousemove',function(e){var r=cv.getBoundingClientRect();paddle.x=e.clientX-r.left-PAD_W/2});
+cv.addEventListener('click',function(){serve()});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft')paddle.x-=26;
+  if(e.key==='ArrowRight')paddle.x+=26;
+  if(e.key===' ')serve();
+  e.preventDefault&&e.preventDefault();
+});
+makeBricks();resetGame();raf=requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

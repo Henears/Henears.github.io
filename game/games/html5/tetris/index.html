@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>俄罗斯方块</title>
+<style>
+  body{margin:0;background:#0f1420;color:#e8edf7;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;height:100vh;justify-content:center}
+  .wrap{display:flex;gap:20px;align-items:flex-start}
+  canvas{background:#1d2433;border:2px solid #2c3a55;border-radius:10px}
+  .side{width:110px}
+  h1{font-size:20px;margin:6px 0}
+  .info{color:#8b8ba2;font-size:13px;margin-bottom:10px}
+  .cell{margin-bottom:10px}
+  .cell span{font-size:13px;color:#9aa7c2}
+  .cell b{font-size:20px;color:#fff}
+  #over{position:fixed;display:none;background:rgba(10,14,24,.9);padding:24px 40px;border-radius:12px;text-align:center}
+  #over b{font-size:22px}
+  button{margin-top:12px;padding:8px 22px;border:none;border-radius:8px;background:#7c5cff;color:#fff;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>俄罗斯方块</h1>
+<div class="info">←→ 移动 · ↑ 旋转 · ↓ 加速 · 空格 落底</div>
+<div class="wrap">
+  <canvas id="cv" width="300" height="600"></canvas>
+  <div class="side">
+    <div class="cell"><span>分数</span><br><b id="score">0</b></div>
+    <div class="cell"><span>等级</span><br><b id="level">1</b></div>
+  </div>
+</div>
+<div id="over"><b>游戏结束</b><br><button onclick="location.reload()">再来一局</button></div>
+<script>
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var COLS=10,ROWS=20,CELL=30;
+var SHAPES=[
+  [[1,1,1,1]],
+  [[1,1],[1,1]],
+  [[0,1,0],[1,1,1]],
+  [[1,0,0],[1,1,1]],
+  [[0,0,1],[1,1,1]],
+  [[1,1,0],[0,1,1]],
+  [[0,1,1],[1,1,0]]
+];
+var COLORS=['#54a0ff','#ffd93d','#c77d0f','#ff6b6b','#ff9f43','#7bed9f','#00d2ff'];
+var board,cur,score,level,over,timer;
+
+function fresh(){
+  board=[];
+  for(var y=0;y<ROWS;y++)board.push(new Array(COLS).fill(0));
+  score=0;level=1;over=false;
+  newShape();
+}
+function newShape(){
+  var i=Math.floor(Math.random()*SHAPES.length);
+  cur={shape:SHAPES[i].map(function(r){return r.slice()}),pos:{x:Math.floor((COLS-SHAPES[i][0].length)/2),y:0},color:COLORS[i]};
+  if(collide(cur.shape,cur.pos)){over=true;document.getElementById('over').style.display='block';return}
+  drawAll();
+}
+function collide(shape,pos){
+  for(var y=0;y<shape.length;y++)for(var x=0;x<shape[y].length;x++){
+    if(!shape[y][x])continue;
+    var nx=pos.x+x,ny=pos.y+y;
+    if(nx<0||nx>=COLS||ny>=ROWS)return true;
+    if(ny>=0&&board[ny][nx])return true;
+  }
+  return false;
+}
+function lock(){
+  var s=cur.shape,p=cur.pos;
+  for(var y=0;y<s.length;y++)for(var x=0;x<s[y].length;x++)
+    if(s[y][x]&&p.y+y>=0)board[p.y+y][p.x+x]=cur.color;
+  clearLines();
+}
+function clearLines(){
+  var cleared=0;
+  for(var y=ROWS-1;y>=0;y--){
+    if(board[y].every(function(v){return v})){
+      board.splice(y,1);board.unshift(new Array(COLS).fill(0));
+      cleared++;y++;
+    }
+  }
+  if(cleared){
+    score+=[0,100,300,500,800][Math.min(cleared,4)]*level;
+    if(Math.floor(score/100)>level&&level<10)level++;
+    document.getElementById('score').textContent=score;
+    document.getElementById('level').textContent=level;
+  }
+  newShape();
+}
+function rotate(shape){
+  var out=[];
+  for(var i=0;i<shape[0].length;i++)out.push(shape.map(function(r){return r[i]}).reverse());
+  return out;
+}
+function drop(){
+  while(!collide(cur.shape,{x:cur.pos.x,y:cur.pos.y+1}))cur.pos.y++;
+  lock();
+}
+function drawAll(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for(var y=0;y<ROWS;y++)for(var x=0;x<COLS;x++){
+    if(board[y][x]){ctx.fillStyle=board[y][x];ctx.fillRect(x*CELL+1,y*CELL+1,CELL-2,CELL-2)}
+  }
+  ctx.fillStyle=cur.color;
+  for(var y=0;y<cur.shape.length;y++)for(var x=0;x<cur.shape[y].length;x++)
+    if(cur.shape[y][x])ctx.fillRect((cur.pos.x+x)*CELL+1,(cur.pos.y+y)*CELL+1,CELL-2,CELL-2);
+}
+document.addEventListener('keydown',function(e){
+  if(over)return;
+  var k=e.key;
+  if(k==='ArrowLeft'&&!collide(cur.shape,{x:cur.pos.x-1,y:cur.pos.y}))cur.pos.x--;
+  if(k==='ArrowRight'&&!collide(cur.shape,{x:cur.pos.x+1,y:cur.pos.y}))cur.pos.x++;
+  if(k==='ArrowUp'){var r=rotate(cur.shape);if(!collide(r,cur.pos))cur.shape=r}
+  if(k==='ArrowDown'&&!collide(cur.shape,{x:cur.pos.x,y:cur.pos.y+1}))cur.pos.y++;
+  if(k===' ')drop();
+  drawAll();
+});
+function tick(){
+  if(over)return;
+  var p={x:cur.pos.x,y:cur.pos.y+1};
+  if(!collide(cur.shape,p)){cur.pos.y++}
+  else lock();
+  drawAll();
+}
+fresh();
+timer=setInterval(tick,600);
+</script>
+</body>
+</html>

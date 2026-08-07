@@ -1,0 +1,155 @@
+/* code.css：负责
+
+代码块的基本结构和布局
+标题栏的基本样式
+行号样式
+语法高亮颜色定义 */
+
+
+
+
+
+
+/* 代码块容器 */
+figure.highlight {
+  margin: 2em 0;
+  background: var(--vscode-bg); /* 统一使用最深的背景色 */
+  box-shadow: 0 4px 16px var(--vscode-code-shadow);
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+}
+
+/* 代码行容器 */
+.code-line {
+  display: flex;
+  align-items: stretch;
+  width: max-content; /* 关键：确保宽度覆盖所有内容 */
+  min-width: 100%;    /* 关键：确保背景至少填满容器宽度 */
+  min-height: 1.5em;
+}
+
+/* 滚动条样式优化 */
+.code-content::-webkit-scrollbar {
+  height: 12px; /* 增加横向滚动条高度 */
+  width: 12px;  /* 增加纵向滚动条宽度 */
+}
+
+.code-content::-webkit-scrollbar-track {
+  background: var(--vscode-bg);
+}
+
+.code-content::-webkit-scrollbar-thumb {
+  background: var(--vscode-border); /* 使用边框颜色作为滑块，对比度适中 */
+  border-radius: 6px;
+  border: 3px solid var(--vscode-bg); /* 增加边框宽度，使滑块看起来更精致 */
+}
+
+.code-content::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-text-light); /* 悬停时变亮 */
+}
+
+/* Firefox 滚动条 */
+.code-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vscode-border) var(--vscode-bg);
+}
+
+.code-line:first-child {
+  /* padding-top: 8px; */ /* 移除行容器的内边距 */
+}
+
+.code-line:last-child {
+  /* padding-bottom: 8px; */ /* 移除行容器的内边距 */
+}
+
+.code-line:first-child .line-num,
+.code-line:first-child .line-code {
+  padding-top: 8px; /* 将内边距应用到单元格内部 */
+}
+
+.code-line:last-child .line-num,
+.code-line:last-child .line-code {
+  padding-bottom: 8px; /* 将内边距应用到单元格内部 */
+}
+
+/* 行号样式 */
+.line-num {
+  flex: 0 0 auto;
+  min-width: 3.5em;
+  padding: 0 12px;
+  text-align: right;
+  color: var(--vscode-code-line-number);
+  background: var(--vscode-code-line-number-bg);
+  border-right: 1px solid var(--vscode-code-border);
+  user-select: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+/* 代码内容样式 */
+.line-code {
+  flex: 1;
+  padding: 0 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre; /* 禁止换行，使用滚动条 */
+  word-break: keep-all;
+  box-sizing: border-box;
+  background: transparent; /* 透明背景，透出容器背景 */
+}
+
+/* 代码内容pre样式优化 */
+.code-content {
+  padding: 0 !important; /* 移除内边距以消除间隙 */
+  margin: 0;
+  flex-shrink: 1; /* 允许在必要时收缩 */
+  overflow-x: auto; /* 允许横向滚动 */
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--vscode-text);
+  background: transparent; /* 透明背景，透出容器背景 */
+  width: 100%;
+  box-sizing: border-box; /* 确保边框盒模型一致 */
+}
+
+/* 超长代码换行控制 */
+.code-content code {
+  white-space: pre; /* 禁止换行 */
+  word-wrap: normal;
+  tab-size: 4;
+  line-height: 1.5;
+}
+
+/* 确保代码内容中的每一行与行号对齐 */
+.code-content .line {
+  line-height: 1.5;
+  margin: 0; /* 确保没有外边距 */
+  padding: 0; /* 确保没有内边距 */
+  box-sizing: border-box; /* 确保边框盒模型一致 */
+}
+
+/* 改进code-pre-wrapper布局 */
+.code-pre-wrapper {
+  display: flex;
+  overflow: hidden;
+  background: var(--vscode-bg); /* 统一使用最深的背景色 */
+  width: 100%;
+  box-shadow: 0 4px 16px var(--vscode-code-shadow);
+  /* align-items: stretch; /* 改为stretch让所有元素高度一致 */
+  align-items: flex-start; /* 修改对齐方式 */
+  min-height: 0; /* 确保能够正确计算高度 */
+  height: auto !important;
+  position: relative; /* 为复制按钮提供定位上下文 */
+  margin: 0; /* 确保没有外边距 */
+  padding: 0; /* 确保没有内边距 */
+  box-sizing: border-box; /* 确保边框盒模型一致 */
+}

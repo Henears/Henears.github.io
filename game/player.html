@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正在游玩</title>
+<link rel="stylesheet" href="css/player.css"></head>
+<body>
+<header class="pbar">
+  <a class="back" href="./" title="返回!博客!">‹</a>
+  <h1 id="gameTitle">游戏</h1>
+  <div class="pbar-actions">
+    <label class="vol-wrap" title="音量">
+      <span class="vol-ico">🔊</span>
+      <input id="volume" type="range" min="0" max="100" value="100">
+    </label>
+    <button id="pause" class="pbtn" title="暂停">⏸</button>
+    <button id="fullscreen" class="pbtn" title="全屏">⛶</button>
+    <button id="reload" class="pbtn" title="重新加载">⟳</button>
+  </div>
+</header>
+
+<main class="stage">
+  <div id="playerBox" class="player-box">
+    <div id="loading" class="loading">正在加载游戏...</div>
+    <div id="pauseOverlay" class="pause-overlay" style="display:none">
+      <div class="po-icon">⏸</div>
+      <div class="po-text">已暂停 — 点击继续</div>
+    </div>
+  </div>
+</main>
+
+<script src="engine/ruffle/ruffle.js"></script>
+<script>
+  const root = (window.GROOT || '.').replace(/\/+$/, '')
+  const params = new URLSearchParams(location.search)
+  const name = params.get('name') || '游戏'
+  const type = params.get('type') || 'html5'
+  const path0 = params.get('path') || ''
+
+  document.getElementById('gameTitle').textContent = name
+
+  const box = document.getElementById('playerBox')
+  const loading = document.getElementById('loading')
+  const ratio = params.get('ratio')
+  const abs = path0.match(/^https?:/)
+    ? path0
+    : (path0.startsWith('/') ? path0 : `${root}/${path0}`)
+
+  if (ratio) {
+    const rp = ratio.split(':').map(Number)
+    const fit = () => {
+      const st = box.parentElement
+      const sw = st.clientWidth - 28
+      const sh = st.clientHeight - 28
+      let w = sw, h = w * rp[1] / rp[0]
+      if (h > sh) { h = sh; w = h * rp[0] / rp[1] }
+      box.style.alignSelf = 'center'
+      box.style.width = w + 'px'
+      box.style.height = h + 'px'
+    }
+    fit()
+    window.addEventListener('resize', fit)
+  }
+
+  let swfPlayer = null
+  let paused = false
+
+  function setVol(p, v) {
+    if (!p) return
+    const api = (typeof p.ruffle === 'function') ? p.ruffle() : p
+    try { if (api) api.volume = v / 100 } catch (e) { /* 旧版引擎不支持 */ }
+  }
+  function applySavedVol(p) {
+    const v = localStorage.getItem('game_volume')
+    if (v !== null) { volInput.value = v; setVol(p, Number(v)) }
+  }
+  const volInput = document.getElementById('volume')
+  volInput.addEventListener('input', () => {
+    const v = Number(volInput.value)
+    localStorage.setItem('game_volume', v)
+    setVol(swfPlayer, v)
+  })
+  if (type !== 'swf') volInput.disabled = true
+
+  function unmountLoad() { loading && loading.remove() }
+
+  function mountHTML5() {
+    unmountLoad()
+    const frame = document.createElement('iframe')
+    frame.className = 'html5-game'
+    frame.src = abs
+    frame.allowFullscreen = 'true'
+    frame.setAttribute('allow', 'fullscreen')
+    box.appendChild(frame)
+  }
+
+  function mountSWF() {
+    unmountLoad()
+    const holder = document.createElement('div')
+    holder.className = 'swf-box'
+    box.appendChild(holder)
+    const rp = window.RufflePlayer || {}
+    if (typeof rp.newest !== 'function') { holder.textContent = 'Ruffle 引擎未加载'; return }
+    const run = (p) => {
+      if (!p) { holder.textContent = 'Ruffle 初始化失败'; return }
+      const player = p.createPlayer ? p.createPlayer() : p
+      player.style.width = '100%'
+      player.style.height = '100%'
+      holder.appendChild(player)
+      swfPlayer = player
+      applySavedVol(player)
+      if (typeof player.load === 'function') player.load(abs)
+      else if (player.ruffle && typeof player.ruffle.load === 'function') player.ruffle.load(abs)
+      else if ('src' in player) player.src = abs
+      else player.setAttribute('src', abs)
+    }
+    try {
+      const engine = rp.newest()
+      engine && engine.then
+        ? engine.then(run).catch(() => { holder.textContent = 'Ruffle 核心加载失败' })
+        : run(engine)
+    }
+    catch (e) { holder.textContent = 'Ruffle 启动失败：' + e.message }
+  }
+
+  if (type === 'swf') mountSWF(); else mountHTML5()
+
+  function targetEl() {
+    return document.querySelector('.html5-game') || document.querySelector('.swf-box')
+  }
+
+  const overlay = document.getElementById('pauseOverlay')
+  function setPaused(on) {
+    paused = on
+    pauseBtn.textContent = on ? '▶' : '⏸'
+    pauseBtn.title = on ? '继续' : '暂停'
+    if (type === 'swf' || !on) overlay.style.display = 'none'
+  }
+  const pauseBtn = document.getElementById('pause')
+  pauseBtn.addEventListener('click', () => {
+    if (type === 'swf') {
+      if (!swfPlayer) return
+      const api = (typeof swfPlayer.ruffle === 'function') ? swfPlayer.ruffle() : swfPlayer
+      if (!paused) {
+        if (typeof api.pause === 'function') api.pause()
+        else if (typeof api.suspend === 'function') api.suspend()
+        paused = true
+      } else {
+        if (typeof api.play === 'function') api.play()
+        else if (typeof api.resume === 'function') api.resume()
+        paused = false
+      }
+      pauseBtn.textContent = paused ? '▶' : '⏸'
+      pauseBtn.title = paused ? '继续' : '暂停'
+    } else {
+      const el = targetEl()
+      if (!el) return
+      if (!paused) { overlay.style.display = 'flex'; setPaused(true) }
+      else { overlay.style.display = 'none'; setPaused(false) }
+    }
+  })
+  overlay.addEventListener('click', () => {
+    overlay.style.display = 'none'
+    setPaused(false)
+    const el = targetEl()
+    if (el && el.tagName === 'IFRAME') { /* 点击继续时恢复焦点 */ el.focus && el.focus() }
+  })
+
+  document.getElementById('fullscreen').addEventListener('click', () => {
+    const el = targetEl()
+    if (!el) return
+    if (el.requestFullscreen) el.requestFullscreen()
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen()
+  })
+
+  document.getElementById('reload').addEventListener('click', () => {
+    const el = targetEl()
+    if (el && el.tagName === 'IFRAME') { el.src = el.src; return }
+    location.reload()
+  })
+</script>
+</body>
+</html>

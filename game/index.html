@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>!博客! · 离线小游戏门户</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="./">
+      <span class="logo-icon">🎮</span>
+      <span class="logo-text" id="portalName">!博客!</span>
+    </a>
+    <div class="searchbox">
+      <input id="searchInput" type="search" placeholder="搜索游戏，如：贪吃蛇">
+      <button id="searchBtn">搜索</button>
+    </div>
+    <a class="home-link" href="/" title="返回 !博客! 博客主页">🏠 主页</a>
+  </div>
+</header>
+
+<div class="page">
+  <aside class="sidebar">
+    <nav class="cat-nav" id="catNav"></nav>
+  </aside>
+
+  <main class="content">
+    <div class="themes" id="themes"></div>
+    <div class="countline"><span id="countText"></span></div>
+    <div class="grid" id="gameGrid"></div>
+    <div class="empty" id="emptyTip" style="display:none">没有找到匹配的游戏</div>
+  </main>
+</div>
+
+<footer class="footer">
+  <p>!博客! · 本页面随网站一起打包，支持离线游玩（Flash 游戏使用内置 Ruffle 引擎）</p>
+</footer>
+
+<script src="js/games.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
